@@ -59,24 +59,15 @@ export default function CheckoutContent({ listing, userId, cancelled }: Checkout
         return;
       }
 
-      if (result.sessionId) {
-        // Redirect to Stripe Checkout
-        const stripe = await import('@stripe/stripe-js').then((mod) =>
-          mod.loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
-        );
-
-        if (stripe) {
-          const { error: stripeError } = await stripe.redirectToCheckout({
-            sessionId: result.sessionId,
-          });
-
-          if (stripeError) {
-            setError(stripeError.message || 'Failed to redirect to checkout');
-            setIsProcessing(false);
-          }
-        }
+      if (result.url) {
+        // Redirect to Stripe Checkout using the session URL
+        window.location.href = result.url;
+      } else {
+        setError('No checkout URL received');
+        setIsProcessing(false);
       }
     } catch (err) {
+      console.error('Checkout error:', err);
       setError('An unexpected error occurred');
       setIsProcessing(false);
     }

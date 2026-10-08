@@ -97,6 +97,7 @@ export async function releaseReservation(listingId: string): Promise<void> {
  */
 export async function createCheckoutSession(listingId: string): Promise<{
   sessionId?: string;
+  url?: string;
   error?: string;
 }> {
   const supabase = await createClient();
@@ -192,7 +193,7 @@ export async function createCheckoutSession(listingId: string): Promise<{
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/checkout/${listingId}?cancelled=true`,
       customer_email: user.email,
-      expires_at: Math.floor(Date.now() / 1000) + (RESERVATION_TIMEOUT_MINUTES * 60), // Same as reservation timeout
+      expires_at: Math.floor(Date.now() / 1000) + (30 * 60), // 30 minutes (Stripe minimum)
     });
 
     // Update order with Stripe session ID
@@ -201,7 +202,7 @@ export async function createCheckoutSession(listingId: string): Promise<{
       .update({ stripe_checkout_session_id: session.id })
       .eq('id', order.id);
 
-    return { sessionId: session.id };
+    return { sessionId: session.id, url: session.url };
   } catch (error) {
     console.error('Error creating Stripe checkout session:', error);
 

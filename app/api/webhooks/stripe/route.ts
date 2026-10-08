@@ -121,7 +121,6 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     .from('listings')
     .update({
       status: 'sold',
-      sold_at: new Date().toISOString(),
       reserved_by: null,
       reserved_at: null,
       reservation_expires_at: null,

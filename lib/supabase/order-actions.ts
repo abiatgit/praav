@@ -184,6 +184,9 @@ export async function createCheckoutSession(listingId: string): Promise<{
           quantity: 1,
         },
       ],
+      payment_intent_data: {
+        receipt_email: user.email, // Send Stripe receipt to buyer's email
+      },
       metadata: {
         order_id: order.id,
         listing_id: listing.id,
@@ -292,6 +295,52 @@ export async function getSellerOrders(): Promise<{
   }
 
   return { orders: orders as unknown as OrderWithDetails[] };
+}
+
+/**
+ * Get order by Stripe Checkout Session ID
+ * Used on success page to fetch order details
+ */
+export async function getOrderBySessionId(sessionId: string): Promise<{
+  order: OrderWithDetails | null;
+  error?: string;
+}> {
+  const supabase = await createClient();
+
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) {
+    return { order: null, error: 'You must be logged in' };
+  }
+
+  const { data: order, error } = await supabase
+    .from('orders')
+    .select(`
+      *,
+      listing:listings(
+        id,
+        title,
+        price,
+        size,
+        condition,
+        images:listing_images(id, image_url, is_cover),
+        category:categories(id, name)
+      ),
+      seller:profiles!seller_id(user_id, username, display_name, avatar_url, city),
+      buyer:profiles!buyer_id(user_id, username, display_name)
+    `)
+    .eq('stripe_checkout_session_id', sessionId)
+    .single();
+
+  if (error) {
+    return { order: null, error: 'Order not found' };
+  }
+
+  // Verify user has access to this order (buyer or seller)
+  if (order.buyer_id !== user.id && order.seller_id !== user.id) {
+    return { order: null, error: 'You do not have access to this order' };
+  }
+
+  return { order: order as unknown as OrderWithDetails };
 }
 
 /**

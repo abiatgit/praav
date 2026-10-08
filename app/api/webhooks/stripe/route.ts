@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
+import { revalidatePath } from 'next/cache';
 import Stripe from 'stripe';
 import { stripe } from '@/lib/stripe';
 import { createClient } from '@supabase/supabase-js';
@@ -134,6 +135,13 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 
   console.log(`✅ Order ${orderId} marked as paid, listing ${listingId} marked as sold`);
 
+  // Revalidate paths to update UI
+  revalidatePath('/marketplace');
+  revalidatePath('/browse');
+  revalidatePath(`/listing/${listingId}`);
+  revalidatePath('/orders');
+  revalidatePath('/dashboard/orders');
+
   // TODO: Send confirmation emails to buyer and seller
   // TODO: Create notification for seller
 }
@@ -161,7 +169,7 @@ async function handleCheckoutSessionExpired(session: Stripe.Checkout.Session) {
   await supabaseAdmin
     .from('listings')
     .update({
-      status: 'active',
+      status: 'published',
       reserved_by: null,
       reserved_at: null,
       reservation_expires_at: null,
@@ -199,7 +207,7 @@ async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
   await supabaseAdmin
     .from('listings')
     .update({
-      status: 'active',
+      status: 'published',
       reserved_by: null,
       reserved_at: null,
       reservation_expires_at: null,

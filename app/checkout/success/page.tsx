@@ -82,8 +82,9 @@ export default async function CheckoutSuccessPage({ searchParams }: {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-4">
             <CheckCircle className="h-8 w-8 text-green-600" />
           </div>
-          <h1 className="text-2xl md:text-3xl font-light tracking-wider mb-2">PAYMENT SUCCESSFUL</h1>
-          <p className="text-gray-600">Your purchase has been confirmed</p>
+          <h1 className="text-2xl md:text-3xl font-light tracking-wider mb-2">Thank you for your purchase!</h1>
+          <p className="text-gray-600 mb-2">Your order has been successfully placed.</p>
+          <p className="text-sm text-gray-500">Thank you for choosing pre-loved fashion with Praav.</p>
         </div>
 
         {/* Order Summary */}
@@ -124,7 +125,9 @@ export default async function CheckoutSuccessPage({ searchParams }: {
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Payment Status</span>
-              <span className="text-green-600 font-medium">Paid</span>
+              <span className={`font-medium ${order.payment_status === 'paid' ? 'text-green-600' : 'text-yellow-600'}`}>
+                {order.payment_status === 'paid' ? 'Paid' : 'Processing'}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Date</span>
@@ -141,6 +144,7 @@ export default async function CheckoutSuccessPage({ searchParams }: {
         <div className="bg-gray-50 border border-gray-200 p-6 mb-8">
           <h3 className="font-medium mb-3">What happens next?</h3>
           <ul className="space-y-2 text-sm text-gray-600">
+            <li>• A payment receipt has been sent to your email address</li>
             <li>• You will receive a confirmation email shortly</li>
             <li>• The seller has been notified of your purchase</li>
             <li>• Arrange delivery details with the seller</li>
